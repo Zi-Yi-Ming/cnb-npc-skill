@@ -7,10 +7,9 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node.js >= 18](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](package.json)
 [![Platform: Windows / macOS / Linux](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-lightgrey.svg)](README.md)
-[![CI](https://img.shields.io/badge/CI-node--check-passing-brightgreen.svg)](.github/workflows/ci.yml)
-<!-- TODO(发布前): 替换下方两个 badge 为真实仓库链接 -->
-[![GitHub stars](https://img.shields.io/badge/stars-0-lightgrey.svg)](#)
-[![GitHub issues](https://img.shields.io/badge/issues-0-lightgrey.svg)](#)
+[![CI](https://img.shields.io/github/actions/workflow/status/Zi-Yi-Ming/cnb-npc-skill/ci.yml)](.github/workflows/ci.yml)
+[![GitHub stars](https://img.shields.io/github/stars/Zi-Yi-Ming/cnb-npc-skill)](https://github.com/Zi-Yi-Ming/cnb-npc-skill/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/Zi-Yi-Ming/cnb-npc-skill)](https://github.com/Zi-Yi-Ming/cnb-npc-skill/issues)
 
 *零依赖 · 纯 Node.js · OpenAPI 驱动*
 
@@ -54,7 +53,7 @@ node bin/cnb-npc.js run "写一个 Python 脚本 hello.py，输出 Hello, CodeBu
 ### 1. 安装
 
 ```bash
-git clone https://github.com/<你的用户名>/cnb-npc-skill.git
+git clone https://github.com/Zi-Yi-Ming/cnb-npc-skill.git
 cd cnb-npc-skill
 # 无需 npm install —— 零依赖
 ```
