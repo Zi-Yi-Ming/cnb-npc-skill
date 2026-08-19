@@ -1,0 +1,35 @@
+{
+  "name": "cnb-npc-skill",
+  "version": "0.1.0",
+  "description": "让 CNB CodeBuddy NPC 替自己上班：检测/引导 Token → 一键建组织/建仓 → 推送代码 → 开 Issue(@CodeBuddy + 工作模式) → 轮询进度 → 验收 PR",
+  "keywords": [
+    "cnb",
+    "codebuddy",
+    "npc",
+    "cloud-agent",
+    "ai",
+    "automation",
+    "git",
+    "cli"
+  ],
+  "type": "module",
+  "bin": {
+    "cnb-npc": "bin/cnb-npc.js"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "SKILL.md",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "onboard": "node bin/cnb-npc.js onboard",
+    "run": "node bin/cnb-npc.js run",
+    "status": "node bin/cnb-npc.js status",
+    "check": "node --check bin/cnb-npc.js && node --check lib/api.js && node --check lib/config.js"
+  },
+  "license": "MIT"
+}

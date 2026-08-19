@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  check:
+    name: Syntax check & smoke test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Node syntax check
+        run: node --check bin/cnb-npc.js && node --check lib/api.js && node --check lib/config.js
+
+      - name: CLI smoke test (--help)
+        run: node bin/cnb-npc.js --help | head -20
+
+      - name: CLI smoke test (onboard without TTY should fail gracefully)
+        run: |
+          set +e
+          output=$(node bin/cnb-npc.js onboard </dev/null 2>&1)
+          code=$?
+          echo "$output"
+          if [ $code -eq 0 ]; then
+            echo "::error::onboard should fail in non-TTY without token"
+            exit 1
+          fi
+          echo "onboard failed gracefully as expected (exit $code)"
+
+      - name: CLI smoke test (status without token)
+        run: |
+          node bin/cnb-npc.js status || true
