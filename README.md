@@ -20,6 +20,23 @@ node bin/cnb-npc.js run "写一个 Python 脚本 hello.py，输出 Hello, CodeBu
 
 之后的建组织/建仓库、推送代码、开 Issue（`@CodeBuddy` + 工作模式）、轮询 NPC 进度、汇报 PR 链接（可选自动合并）全部自动完成。
 
+## 为什么用它
+
+把 CodeBuddy NPC 当成一个"干杂活的子智能体"：主力 agent（Claude Code、AtomCode 这类）保留给需要复杂推理的任务，而**已经规划好、按部就班的任务，以及简单但繁琐的任务**，交给 NPC 在云端异步执行。类似 Claude Code 里把简单任务交给 Haiku 的定位——各司其职。
+
+具体收益：
+
+- **不占主力 agent 的上下文**：任务在 CNB 云端独立执行，不挤占本地对话窗口
+- **不占模型并发输出**：NPC 走 CNB 平台自己的模型资源，和你的本地 API 额度互不影响
+- **免费**：当前 CodeBuddy NPC 免费使用（官方原话"临时免费，年后再说"，仅 CodeBuddy，内置 hy3、deepseek-v4-flash 等模型）
+- **质量可靠**：提示词给得相对完整时输出质量很高，大项目和批量数据处理都适用
+
+### 它到底是什么
+
+准确地说，CodeBuddy NPC 不是"CodeBuddy 接了一些 MCP"：它是在 Issue/PR 评论里 `@` 触发（`issue.comment@npc` 事件）→ 平台拉起 NPC 运行时 → 基于 CodeBuddy SDK 的 Agent 自主获取仓库上下文、调用 CNB Skills（OpenAPI / CNB CLI 封装）操作仓库、Issue、PR → 在工作模式授权下写代码、建分支、提 PR → 在 Issue 里等你验收。和编辑器里实时给建议的 Copilot 不同，它是**异步接单、自主执行、提交 PR 等验收**的云端智能体，更像挂在远程仓库上的一个 AI 同事。
+
+它的角色、提示词与行为都是开源的：[npc/CodeBuddy](https://cnb.cool/npc/CodeBuddy)（CodeBuddy NPC 官方仓库，支持 fork 自定义角色、SOP 与 Skills）。本工具则是把"创建仓库、推送代码、开 Issue 触发 NPC、轮询验收"这套流程封装成一条命令。
+
 ## 特性
 
 - **首次引导**：自动检测 Token，打开浏览器完成注册/生成令牌，粘贴即校验并持久化，全程只需人工做"注册 + 粘贴令牌"两件事
@@ -179,7 +196,7 @@ cnb-npc-skill/
 
 ## 计费
 
-当前 CNB 的 NPC 为临时免费阶段，收费政策以官方公告为准。用量可在 `组织 → 设置 → 用量管理` 查看（详见 [CNB 定价文档](https://docs.cnb.cool/zh/pricing.html)）。
+当前 CNB 的 NPC 为免费阶段。官方原话：临时免费，年后再说（免费仅限CodeBuddy，内置hy3和deepseek-v4-flash）。收费政策以官方公告为准。用量可在 `组织 → 设置 → 用量管理` 查看（详见 [CNB 定价文档](https://docs.cnb.cool/zh/pricing.html)）。
 
 ## FAQ
 
