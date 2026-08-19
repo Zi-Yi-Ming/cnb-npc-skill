@@ -2,6 +2,15 @@
   "name": "cnb-npc-skill",
   "version": "0.1.0",
   "description": "让 CNB CodeBuddy NPC 替自己上班：检测/引导 Token → 一键建组织/建仓 → 推送代码 → 开 Issue(@CodeBuddy + 工作模式) → 轮询进度 → 验收 PR",
+  "main": "bin/cnb-npc.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zi-Yi-Ming/cnb-npc-skill.git"
+  },
+  "homepage": "https://github.com/Zi-Yi-Ming/cnb-npc-skill#readme",
+  "bugs": {
+    "url": "https://github.com/Zi-Yi-Ming/cnb-npc-skill/issues"
+  },
   "keywords": [
     "cnb",
     "codebuddy",
