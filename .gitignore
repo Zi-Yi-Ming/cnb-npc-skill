@@ -4,6 +4,7 @@ node_modules/
 
 # 本地令牌/配置，绝不入库
 .cnb-npc/
+.atomcode/
 
 # 临时目录
 tmp/

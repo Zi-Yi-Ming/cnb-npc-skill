@@ -5,7 +5,6 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node.js >= 18](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Zi-Yi-Ming/cnb-npc-skill/ci.yml)](.github/workflows/ci.yml)
-[![GitHub stars](https://img.shields.io/github/stars/Zi-Yi-Ming/cnb-npc-skill)](https://github.com/Zi-Yi-Ming/cnb-npc-skill/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/Zi-Yi-Ming/cnb-npc-skill)](https://github.com/Zi-Yi-Ming/cnb-npc-skill/issues)
 
 ## 简介
