@@ -42,7 +42,7 @@ node bin/cnb-npc.js run "写一个 Python 脚本 hello.py，输出 Hello, CodeBu
 - **首次引导**：自动检测 Token，打开浏览器完成注册/生成令牌，粘贴即校验并持久化，全程只需人工做"注册 + 粘贴令牌"两件事
 - **自动建组织/仓库**：通过 `group-manage` / `group-resource` API，没有组织也能直接开跑
 - **工作模式 API 直开**：创建 Issue 时传 `work_mode: true`，不需要到网页勾选"替我上班"
-- **轮询与合并**：监听 NPC 提交的 PR（`author.is_npc`），支持超时控制，可自动 squash 合并
+- **轮询与合并**：优先用平台 `npc-observability` 专用接口检测 NPC 的 PR（`author.is_npc` 兜底），支持超时控制，可自动 squash 合并
 - **零依赖**：只需要 Node.js ≥ 18（内置 fetch）和 git，没有第三方包
 - **可被 AI 助手调用**：内置 `SKILL.md`，安装到 Claude Code / Opencode 等助手的 skills 目录后，说一句"让 NPC 替我上班"即可触发
 - **令牌安全**：Token 只存环境变量或 `~/.cnb-npc/config.json`，不会写进 Issue 正文，git remote 推送后自动清理令牌
@@ -130,7 +130,7 @@ node bin/cnb-npc.js status
 | `--timeout <秒>` | 轮询超时 | `3600` |
 | `--interval <秒>` | 轮询间隔 | `30` |
 | `--merge` | 检测到 PR 后自动 squash 合并 | 关 |
-| `--no-browser` | onboard 时不自动打开浏览器 | 开 |
+| `--no-browser` | onboard 时不自动打开浏览器 | 关（默认自动打开） |
 
 ### 环境变量
 
@@ -161,7 +161,7 @@ cnb-npc 通过 [CNB OpenAPI](https://api.cnb.cool) 与平台交互，各步骤�
 | 查仓库/默认分支 | `GET /{repo}`、`GET /{repo}/-/git/head` | `repo-basic-info:r`、`repo-code:r` |
 | 开 Issue（含工作模式） | `POST /{repo}/-/issues`（`work_mode: true`） | `repo-issue:rw` |
 | 读评论 | `GET /{repo}/-/issues/{n}/comments` | `repo-notes:r` |
-| 查 PR | `GET /{repo}/-/pulls` | `repo-pr:r` |
+| 查 PR | `GET /{repo}/-/pulls`、`GET /{repo}/-/npc-observability/prs` | `repo-pr:r` |
 | 合并 PR | `PUT /{repo}/-/pulls/{n}/merge` | `repo-pr:rw` |
 
 ### 目录结构
@@ -186,6 +186,7 @@ cnb-npc-skill/
 - 评论数超过 100 条后不再触发任何 `@npc` 事件
 - NPC 在 Issue 所属仓库的默认分支上执行，脚本会自动查询并推送到默认分支
 - NPC 执行是分钟~小时级，属于异步任务，建议 `--timeout` 留足余量
+- 轮询超时后脚本以退出码 2 结束（便于 CI/自动化识别"任务未完成"），Issue 链接仍会打印
 
 ## 安全
 

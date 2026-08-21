@@ -48,7 +48,7 @@ node cnb-npc-skill/bin/cnb-npc.js run "给 README 补一份 API 使用示例" --
 2. **仓库**：`--repo` 指定（默认 `npc-task`）；不存在则自动创建（默认 `private`）；
 3. **推送**：`--dir` 指定本地代码目录；未指定则生成一个含任务说明 README 的临时仓库。git 推送使用 `cnb` 用户 + 令牌密码，推送后 remote 会换回不带令牌的干净地址；
 4. **开 Issue**：`@CodeBuddy` 写在 Issue 正文**纯文本**中（不能在代码块/引用/列表里，否则不触发），并带 `work_mode: true` 开启工作模式（NPC 可写代码、建分支、提 PR）；
-5. **轮询**：每 `--interval` 秒（默认 30）查一次 NPC 的 PR（`author.is_npc` 或 npc-observability 接口），直到 `--timeout`（默认 3600s）；
+5. **轮询**：每 `--interval` 秒（默认 30）查一次 NPC 的 PR（优先 npc-observability 专用接口，`author.is_npc` 兜底），直到 `--timeout`（默认 3600s）；
 6. **汇报**：发现 NPC 的 PR 后打印链接；加 `--merge` 自动 squash 合并。
 
 ### 3. 常用选项
@@ -62,7 +62,7 @@ node cnb-npc-skill/bin/cnb-npc.js run "给 README 补一份 API 使用示例" --
 | `--timeout <秒>` | 轮询超时 | 3600 |
 | `--interval <秒>` | 轮询间隔 | 30 |
 | `--merge` | 检测到 PR 自动 squash 合并 | 关 |
-| `--no-browser` | onboard 时不自动开浏览器 | 开 |
+| `--no-browser` | onboard 时不自动开浏览器 | 关（默认自动打开） |
 
 ### 4. 状态查看
 

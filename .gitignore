@@ -3,7 +3,6 @@ node_modules/
 .DS_Store
 
 # 本地令牌/配置，绝不入库
-~/.cnb-npc/
 .cnb-npc/
 
 # 临时目录

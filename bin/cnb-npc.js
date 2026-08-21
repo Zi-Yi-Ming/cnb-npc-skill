@@ -87,21 +87,19 @@ function prompt(question) {
   });
 }
 
-/** 把任务描述转成合法的仓库名 */
-function slugify(text, max = 40) {
-  const s = (text || '')
-    .toLowerCase()
-    .replace(/[^\w\u4e00-\u9fa5-]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-  return (s || 'npc-task').slice(0, max);
-}
-
 /** 等待 sleep 毫秒 */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/** 在 repo 里找 NPC 创建的 PR（author.is_npc 或 npc-observability） */
+/** 在 repo 里找 NPC 创建的 PR：优先 npc-observability 专用接口，pulls 的 author.is_npc 作兜底 */
 async function findNpcPrs(token, repoPath) {
+  // 平台为 NPC 场景提供的专用检测接口（返回数组或 {prs:[...]}）
+  try {
+    const npc = await api.getNpcPrs(token, repoPath);
+    const list = Array.isArray(npc) ? npc : npc && Array.isArray(npc.prs) ? npc.prs : null;
+    if (list && list.length) return list;
+  } catch {
+    /* 接口不可用时回退到 pulls 检测 */
+  }
   const out = [];
   try {
     const pulls = await api.getPulls(token, repoPath);
@@ -242,6 +240,7 @@ async function runTask(task, opts) {
   const repoName = opts.repo || 'npc-task';
   const repoPath = `${orgSlug}/${repoName}`;
   let repo = await api.getRepo(token, repoPath);
+  const repoExisted = !!repo;
   if (!repo) {
     log(`创建仓库 ${repoPath}…`);
     await api.createRepo(token, orgSlug, {
@@ -252,6 +251,9 @@ async function runTask(task, opts) {
     repo = await api.getRepo(token, repoPath);
   } else {
     log(`复用已有仓库 ${repoPath}`);
+    if (!opts.dir && repoExisted) {
+      log(`⚠️ 未指定 --dir：将推送全新的临时目录。若远端仓库已有提交，历史分叉会导致推送失败，建议用 --dir 指定与远端同源的代码目录。`);
+    }
   }
 
   // 3. 准备本地目录并推送
@@ -327,6 +329,7 @@ ${task}
   log(`\n⏰ 轮询超时（${timeoutSec}s），NPC 还未提交 PR。`);
   log(`Issue 地址（可随时去页面查看/催办）：${issueUrl}`);
   log(`在 Issue 下再 @一次 CodeBuddy 可重新触发（注：编辑/重开不会重新触发）。`);
+  process.exitCode = 2; // 超时 = 任务未完成，非零退出供 CI/自动化识别
 }
 
 /** 初始化 git 并推送代码到 CNB 仓库 */
@@ -349,12 +352,12 @@ async function pushToRepo(token, orgSlug, repoName, workDir) {
   };
 
   if (!fs.existsSync(path.join(workDir, '.git'))) git(['init']);
-  // 确保有提交身份（无全局 git 配置时也能 commit）
+  // 确保有提交身份：仅当本地/全局都没有配置时才写入本地身份，避免覆盖用户已有配置
   try {
-    git(['config', 'user.name', 'cnb-npc']);
-    git(['config', 'user.email', 'cnb-npc@cnb.cool']);
+    if (!gitRaw(['config', 'user.name']).stdout.trim()) git(['config', 'user.name', 'cnb-npc']);
+    if (!gitRaw(['config', 'user.email']).stdout.trim()) git(['config', 'user.email', 'cnb-npc@cnb.cool']);
   } catch {
-    /* 已有全局配置，忽略 */
+    /* 忽略 */
   }
   // 确保至少有一个提交（空仓库时 rev-parse 失败属正常，不视为错误）
   const hasCommit = gitRaw(['rev-parse', '--verify', 'HEAD']).status === 0;
@@ -364,6 +367,8 @@ async function pushToRepo(token, orgSlug, repoName, workDir) {
   } else {
     const changed = git(['status', '--porcelain']);
     if (changed) {
+      const n = changed.split('\n').filter(Boolean).length;
+      log(`⚠️ 检测到 ${n} 个未提交改动，将全部提交（update: cnb-npc task）并推送给 NPC。`);
       git(['add', '-A']);
       git(['commit', '-m', 'update: cnb-npc task']);
     }
@@ -392,10 +397,10 @@ async function pushToRepo(token, orgSlug, repoName, workDir) {
   } catch {
     /* 忽略 */
   }
-  // 把 remote 换成不带 token 的干净地址
+  // 用独立 remote 名（cnb）记录干净地址，绝不覆盖用户已有的 origin
   try {
-    if (git(['remote']).includes('origin')) git(['remote', 'set-url', 'origin', remote]);
-    else git(['remote', 'add', 'origin', remote]);
+    if (git(['remote']).includes('cnb')) git(['remote', 'set-url', 'cnb', remote]);
+    else git(['remote', 'add', 'cnb', remote]);
   } catch {
     /* 非必须 */
   }
