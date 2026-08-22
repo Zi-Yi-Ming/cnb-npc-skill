@@ -1,0 +1,47 @@
+# 报告里使用的稳定用例 ID，与文件名（去掉 .yaml）保持一致
+id: default-branch-constraint
+# 用例列表和报告里显示的简要说明
+title: 知道 NPC 只在默认分支上执行，代码推错分支时能定位
+# 补充背景：本用例覆盖的行为或防回归点
+description: |
+  skill 明写：NPC 在 Issue 所属仓库的默认分支上执行，
+  所以推送时要确保代码在默认分支（脚本会查 GET /{repo}/-/git/head）。
+  用例给一个「代码推到了 feature 分支但 NPC 看不到」的场景，
+  这个症状很容易被误诊成 NPC 没读到仓库或索引没建好。
+
+input:
+  # 发给 Agent 的用户 prompt（单轮）
+  prompt: |
+    我用 cnb-npc 派了任务，NPC 有响应也开始干活了，
+    但它在 Issue 里回复说仓库里找不到我说的那些源码文件，让我确认路径。
+
+    我确认过了，代码肯定推上去了——我是推到 dev 分支的，
+    在 CNB 网页上切到 dev 分支能看到全部文件。仓库默认分支是 main，还是空的。
+
+    是不是 NPC 的代码索引还没建好？要等一会儿吗？
+
+# 零成本前置门槛，不过则跳过 judge
+expect:
+  must_contain:
+    - "默认分支"
+
+judge:
+  # 本用例的判定策略
+  # 可选：rule_based | agent_judge | script
+  type: rule_based
+  success:
+    # 必须定位到「NPC 只看默认分支」这个真因
+    - output_matches:
+        all:
+          - "(?s)默认分支"
+          - "(?s)main|dev"
+    # 必须给出可行处置：把代码弄到默认分支，或改默认分支
+    - output_matches:
+        all:
+          - "(?s)推(送)?到.{0,10}(默认分支|main)|合并.{0,12}main|(改|换|切).{0,12}默认分支"
+  failure:
+    # 归因成索引延迟、让用户等，是错误诊断
+    - output_matches:
+        any:
+          - "(?s)(索引|缓存).{0,15}(没|未|还在).{0,10}(建|好|完成|同步)"
+          - "(?s)(等|稍等).{0,10}(一会|几分钟|片刻).{0,10}(再|就)"

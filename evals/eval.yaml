@@ -1,0 +1,41 @@
+# skill-up 评测配置 schema 版本，不要改这个值
+schema_version: v1alpha1
+
+environment:
+  # 每个用例的运行环境；本套件全部是知识/纪律问答，不执行真实派发，无需沙箱
+  # 可选：none | opensandbox | docker
+  type: none
+
+skills:
+  # 运行用例前安装进 Agent Engine 的 Skill
+  # source 可选：local_path
+  - source: local_path
+    # 被测 Skill 的路径，相对本 eval.yaml 所在的 Skill 根目录
+    path: .
+
+engine:
+  # 执行 prompt 并产出待评输出的 Agent Engine
+  # 内置可选：claude_code | codex | qodercli | qwen_code
+  name: claude_code
+
+cases:
+  # 本套件包含的用例文件，相对 Skill 根目录
+  files:
+    - evals/cases/at-codebuddy-plaintext.yaml
+    - evals/cases/edit-issue-no-retrigger.yaml
+    - evals/cases/token-never-in-issue.yaml
+    - evals/cases/default-branch-constraint.yaml
+    - evals/cases/onboard-token-scopes.yaml
+    - evals/cases/no-dir-history-divergence.yaml
+  # 每个用例默认继承的约束，用例可自行覆盖
+  defaults:
+    # 实测单例可达 260s+，300s 会误判成 ERROR，留足余量
+    timeout_seconds: 600
+    max_turns: 8
+  # 用例无状态，可并发；受本机 Agent 并发能力限制，保守设 2
+  parallelism: 2
+
+report:
+  # 每次运行后输出的报告格式
+  # 可选：json | junit | html
+  formats: [json, html]

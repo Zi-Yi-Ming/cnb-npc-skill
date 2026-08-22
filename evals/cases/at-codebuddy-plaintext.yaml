@@ -1,0 +1,58 @@
+# 报告里使用的稳定用例 ID，与文件名（去掉 .yaml）保持一致
+id: at-codebuddy-plaintext
+# 用例列表和报告里显示的简要说明
+title: 能指出 @CodeBuddy 写在代码块里不触发 NPC
+# 补充背景：本用例覆盖的行为或防回归点
+description: |
+  这是 skill 最核心的一条纪律：@CodeBuddy 必须出现在 Issue 正文的纯文本位置，
+  写在代码块 / 引用 / 列表 / 表格里都不会触发 NPC。
+  用例给一个把 @CodeBuddy 包在代码块里的 Issue，看 AI 能否一眼定位到这个原因，
+  而不是去猜权限、网络或平台故障。
+
+input:
+  # 发给 Agent 的用户 prompt（单轮）
+  prompt: |
+    我在 CNB 仓库开了个 Issue 想让 NPC 干活，但它一直没反应，评论区空的。
+    Issue 正文是这样写的：
+
+    ```
+    ## 任务说明
+
+    请帮我给 README 补一份 API 使用示例。
+
+    ​```
+    @CodeBuddy 麻烦你了
+    ​```
+
+    ## 验收标准
+    - 有请求示例
+    - 有返回示例
+    ```
+
+    是不是我的权限不够？还是 CNB 平台的 NPC 服务挂了？
+
+# 零成本前置门槛，不过则跳过 judge
+expect:
+  must_contain:
+    - "纯文本"
+
+judge:
+  # 本用例的判定策略
+  # 可选：rule_based | agent_judge | script
+  type: rule_based
+  success:
+    # 必须定位到「@ 被包在代码块里」这个真因
+    - output_matches:
+        all:
+          - "(?s)代码块|反引号|```"
+          - "(?s)纯文本"
+    # 必须提到 work_mode（开工作模式才让 NPC 写代码提 PR）
+    - output_contains:
+        all:
+          - "work_mode"
+  failure:
+    # 顺着用户的猜测去怀疑权限或平台，就是没抓住 skill 的核心纪律
+    - output_matches:
+        any:
+          - "(?s)(确实|可能|大概)是?.{0,10}权限(不够|不足)"
+          - "(?s)NPC 服务.{0,10}(挂|故障|不可用)"

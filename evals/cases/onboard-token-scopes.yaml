@@ -1,0 +1,43 @@
+# 报告里使用的稳定用例 ID，与文件名（去掉 .yaml）保持一致
+id: onboard-token-scopes
+# 用例列表和报告里显示的简要说明
+title: 首次引导时能说出三个必需的令牌授权范围
+# 补充背景：本用例覆盖的行为或防回归点
+description: |
+  onboard 需要用户勾选三个授权范围：group-manage:rw（建组织）、
+  group-resource:rw（建仓库）、repo-issue:rw（Issue）。
+  少勾一个后面就会在某一步 403，而且报错位置离真因很远。
+  这是纯查表能力，但漏掉任一项都会让用户白跑一轮流程。
+
+input:
+  # 发给 Agent 的用户 prompt（单轮）
+  prompt: |
+    我第一次用 cnb-npc，现在在 CNB 的令牌创建页面，
+    权限勾选项一大堆看不懂。我要勾哪几个才够用？
+    另外这个令牌生成之后存哪，要不要我写到什么配置文件里？
+
+# 零成本前置门槛，不过则跳过 judge
+expect:
+  must_contain:
+    - "group-manage:rw"
+
+judge:
+  # 本用例的判定策略
+  # 可选：rule_based | agent_judge | script
+  type: rule_based
+  success:
+    # 三个授权范围一个都不能漏
+    - output_contains:
+        all:
+          - "group-manage:rw"
+          - "group-resource:rw"
+          - "repo-issue:rw"
+    # 必须说明存放位置，且要提到 onboard 会自动存
+    - output_matches:
+        all:
+          - "(?s)CNB_TOKEN|环境变量"
+          - "(?s)config\\.json|~/\\.cnb-npc|\\.cnb-npc"
+    # 必须给出 onboard 命令（而不是让用户手工搬令牌）
+    - output_contains:
+        all:
+          - "onboard"
