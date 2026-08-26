@@ -22,7 +22,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Node syntax check
-        run: node --check bin/cnb-npc.js && node --check lib/api.js && node --check lib/config.js
+        run: node --check bin/cnb-npc.js && node --check lib/api.js && node --check lib/config.js && node --check lib/args.js
+
+      - name: Unit tests (parseArgs)
+        run: npm test
 
       - name: CLI smoke test (--help)
         run: node bin/cnb-npc.js --help | head -20

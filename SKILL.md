@@ -32,7 +32,7 @@ node cnb-npc-skill/bin/cnb-npc.js onboard
 脚本会：
 1. 检测是否已有 Token（环境变量 `CNB_TOKEN` 或 `~/.cnb-npc/config.json`）——有则跳过；
 2. 打开浏览器跳转 cnb.cool 注册页 和 cnb.cool/profile/token 令牌页；
-3. 提示用户勾选授权范围：`group-manage:rw`（建组织）、`group-resource:rw`（建仓库）、`repo-issue:rw`（Issue）；
+3. 提示用户勾选授权范围（建议全选最省事）：`group-manage:rw`（建组织）、`group-resource:rw`（建仓库）、`repo-issue:rw`（开 Issue + 工作模式）、`repo-pr:rw`（轮询/合并 PR）、`repo-code:rw`（推送/查分支）、`repo-basic-info:r`、`repo-notes:r`、`account-engage:r`（列组织）；
 4. 用户粘贴令牌 → 脚本用 `GET /user/groups` 校验 → 存入 `~/.cnb-npc/config.json`。
 
 非交互环境（CI/无 TTY）下若没有 Token，脚本会直接报错并给出手动步骤，不会挂起等待输入。

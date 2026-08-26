@@ -37,7 +37,8 @@
     "onboard": "node bin/cnb-npc.js onboard",
     "run": "node bin/cnb-npc.js run",
     "status": "node bin/cnb-npc.js status",
-    "check": "node --check bin/cnb-npc.js && node --check lib/api.js && node --check lib/config.js"
+    "check": "node --check bin/cnb-npc.js && node --check lib/api.js && node --check lib/config.js && node --check lib/args.js",
+    "test": "node --test test/args.test.js"
   },
   "license": "MIT"
 }

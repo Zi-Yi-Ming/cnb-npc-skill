@@ -11,6 +11,7 @@ import { spawnSync } from 'node:child_process';
 import readline from 'node:readline';
 import { getToken, loadConfig, saveConfig, configPath } from '../lib/config.js';
 import * as api from '../lib/api.js';
+import { parseArgs } from '../lib/args.js';
 
 const WEB = 'https://cnb.cool';
 const HELP = `cnb-npc —— 让 CNB CodeBuddy NPC 替自己上班
@@ -146,10 +147,15 @@ async function onboard({ noBrowser = false } = {}) {
   } else {
     log(`  请手动访问 ${WEB}/profile/token`);
   }
-  log('  添加访问令牌时，请勾选以下授权范围：');
-  log('    - 组织：group-manage:rw（自动建组织）');
-  log('    - 仓库：group-resource:rw（自动建仓库）');
-  log('    - Issue：repo-issue:rw（自动开 Issue）');
+  log('  添加访问令牌时，请勾选以下授权范围（按 README 的建议全选最省事）：');
+  log('    - group-manage:rw   建组织（自动创建 npc-workspace）');
+  log('    - group-resource:rw 建仓库');
+  log('    - repo-issue:rw     开 Issue + 工作模式');
+  log('    - repo-pr:rw        轮询 PR + 自动合并');
+  log('    - repo-code:rw      git 推送 + 查默认分支');
+  log('    - repo-basic-info:r 仓库存在性判断');
+  log('    - repo-notes:r      读取 NPC 评论');
+  log('    - account-engage:r  列出组织（免手输 --org）');
 
   let token = '';
   while (!token) {
@@ -408,28 +414,6 @@ async function pushToRepo(token, orgSlug, repoName, workDir) {
 }
 
 // ---------- main ----------
-
-function parseArgs(argv) {
-  const opts = {};
-  const rest = [];
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i];
-    if (a === '--help' || a === '-h') opts.help = true;
-    else if (a.startsWith('--')) {
-      const key = a.slice(2);
-      const next = argv[i + 1];
-      if (next && !next.startsWith('--')) {
-        opts[key] = next;
-        i++;
-      } else {
-        opts[key] = true;
-      }
-    } else {
-      rest.push(a);
-    }
-  }
-  return { opts, rest };
-}
 
 async function main() {
   const { opts, rest } = parseArgs(process.argv.slice(2));
