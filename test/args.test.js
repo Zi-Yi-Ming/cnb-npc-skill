@@ -22,6 +22,19 @@ test('布尔 flag（--merge）不带值时置 true', () => {
   assert.strictEqual(opts.merge, true);
 });
 
+test('无值布尔 flag 不吞后面的位置参数（回归 run --no-work-mode "任务"）', () => {
+  const { opts, rest } = parseArgs(['run', '--no-work-mode', '评审任务']);
+  assert.strictEqual(opts.noWorkMode, true);
+  assert.deepStrictEqual(rest, ['run', '评审任务']);
+});
+
+test('布尔 flag 放在位置参数前面同样不吞参（run --no-work-mode --title x 任务）', () => {
+  const { opts, rest } = parseArgs(['run', '--no-work-mode', '--title', '标题', '任务描述']);
+  assert.strictEqual(opts.noWorkMode, true);
+  assert.strictEqual(opts.title, '标题');
+  assert.deepStrictEqual(rest, ['run', '任务描述']);
+});
+
 test('--help / -h 都能识别', () => {
   assert.strictEqual(parseArgs(['--help']).opts.help, true);
   assert.strictEqual(parseArgs(['-h']).opts.help, true);

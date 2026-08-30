@@ -42,6 +42,30 @@ jobs:
           fi
           echo "onboard failed gracefully as expected (exit $code)"
 
+      - name: CLI smoke test (comments without token should fail gracefully)
+        run: |
+          set +e
+          output=$(node bin/cnb-npc.js comments owner/repo 1 2>&1)
+          code=$?
+          echo "$output"
+          if [ $code -eq 0 ]; then
+            echo "::error::comments should fail without token"
+            exit 1
+          fi
+          echo "comments failed gracefully as expected (exit $code)"
+
+      - name: CLI smoke test (api without token should fail gracefully)
+        run: |
+          set +e
+          output=$(node bin/cnb-npc.js api GET /user/groups 2>&1)
+          code=$?
+          echo "$output"
+          if [ $code -eq 0 ]; then
+            echo "::error::api should fail without token"
+            exit 1
+          fi
+          echo "api failed gracefully as expected (exit $code)"
+
       - name: CLI smoke test (status without token)
         run: |
           node bin/cnb-npc.js status || true

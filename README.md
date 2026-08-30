@@ -19,6 +19,8 @@ node bin/cnb-npc.js run "写一个 Python 脚本 hello.py，输出 Hello, CodeBu
 
 之后的建组织/建仓库、推送代码、开 Issue（`@CodeBuddy` + 工作模式）、轮询 NPC 进度、汇报 PR 链接（可选自动合并）全部自动完成。
 
+除了"写代码提 PR"的工作模式，还支持**只读模式**（`run --no-work-mode`）：不开工作模式，NPC 只在评论里输出报告——适合代码评审、方案分析这类不想让它改代码的场景；配套 `comments --wait` 收报告、`comment` 多轮追问、`api` 通用透传。
+
 ## 为什么用它
 
 把 CodeBuddy NPC 当成一个"干杂活的子智能体"：主力 agent（Claude Code、AtomCode 这类）保留给需要复杂推理的任务，而**已经规划好、按部就班的任务，以及简单但繁琐的任务**，交给 NPC 在云端异步执行。类似 Claude Code 里把简单任务交给 Haiku 的定位——各司其职。
@@ -42,6 +44,9 @@ node bin/cnb-npc.js run "写一个 Python 脚本 hello.py，输出 Hello, CodeBu
 - **自动建组织/仓库**：通过 `group-manage` / `group-resource` API，没有组织也能直接开跑
 - **工作模式 API 直开**：创建 Issue 时传 `work_mode: true`，不需要到网页勾选"替我上班"
 - **轮询与合并**：优先用平台 `npc-observability` 专用接口检测 NPC 的 PR（`author.is_npc` 兜底），支持超时控制，可自动 squash 合并
+- **只读评审模式**：`run --no-work-mode` 创建不带 `work_mode` 的 Issue，NPC 只在评论输出报告（评审/分析不改代码），轮询目标自动切换为评论
+- **评论轮询与多轮追问**：`comments <repo> <n> --wait` 在命令行等 NPC 报告，`comment` 发评论重触发/追问
+- **OpenAPI 通用透传**：`api <METHOD> <path>` 直调任意 CNB 接口，lib 未封装的能力（改标题、列分支等）即取即用
 - **零依赖**：只需要 Node.js ≥ 18（内置 fetch）和 git，没有第三方包
 - **可被 AI 助手调用**：内置 `SKILL.md`，安装到 Claude Code / Opencode 等助手的 skills 目录后，说一句"让 NPC 替我上班"即可触发
 - **令牌安全**：Token 只存环境变量或 `~/.cnb-npc/config.json`，不会写进 Issue 正文，git remote 推送后自动清理令牌
@@ -81,7 +86,7 @@ node bin/cnb-npc.js onboard
 | `repo-pr` | 读写 | 轮询 PR + 自动合并 |
 | `repo-code` | 读写 | git 推送 + 查默认分支 |
 | `repo-basic-info` | 只读 | 仓库存在性判断 |
-| `repo-notes` | 只读 | 读取 NPC 评论 |
+| `repo-notes` | 读写 | 读取 NPC 报告 + 发评论重触发 |
 | `account-engage` | 只读 | 列出组织（免去手输 `--org`） |
 
 > 省事做法：常见场景直接全选。令牌仅保存在本机，风险可控。
@@ -99,6 +104,9 @@ node bin/cnb-npc.js run "给 README 补一份 API 使用示例" --dir ./my-code 
 
 # 自动合并 NPC 的 PR
 node bin/cnb-npc.js run "修复登录页的 XSS 漏洞" --org my-org --repo web-app --merge
+
+# 只读评审（NPC 不改代码，报告输出在 Issue 评论里）
+node bin/cnb-npc.js run "评审最近 10 个提交的异常处理" --org my-org --repo my-repo --no-work-mode --no-push --title "代码评审：异常处理"
 ```
 
 ### 4. 查看状态
@@ -114,7 +122,10 @@ node bin/cnb-npc.js status
 | 命令 | 说明 |
 |---|---|
 | `onboard` | 首次引导：注册/生成/校验/持久化访问令牌 |
-| `run "<任务>"` | 端到端派发任务给 CodeBuddy NPC |
+| `run "<任务>"` | 端到端派发任务给 CodeBuddy NPC（默认工作模式，`--no-work-mode` 走只读） |
+| `comment <owner/repo> <n> "<文本>"` | 在 Issue 下发评论（@CodeBuddy 重触发 / 多轮追问） |
+| `comments <owner/repo> <n>` | 查看评论；加 `--wait` 等待新评论出现（收只读报告） |
+| `api <METHOD> <path>` | CNB OpenAPI 通用透传（`--data` 传请求体，支持 `@file`） |
 | `status` | 查看令牌来源与可访问组织 |
 | `--help` | 帮助信息 |
 
@@ -126,10 +137,30 @@ node bin/cnb-npc.js status
 | `--repo <name>` | 仓库名 | `npc-task` |
 | `--dir <路径>` | 本地代码目录 | 临时 README 空仓库 |
 | `--visibility <v>` | 仓库可见性 `public`/`private`/`secret` | `private` |
+| `--no-work-mode` | 只读模式：不开工作模式，NPC 只在评论输出报告 | 关 |
+| `--title <文本>` | 自定义 Issue 标题 | 任务描述前 255 字符 |
+| `--body-file <路径>` | 用文件内容作 Issue 正文（UTF-8，需含纯文本 `@CodeBuddy`） | 关 |
+| `--no-push` | 跳过推送（评审已有远端内容的仓库） | 关 |
 | `--timeout <秒>` | 轮询超时 | `3600` |
 | `--interval <秒>` | 轮询间隔 | `30` |
 | `--merge` | 检测到 PR 后自动 squash 合并 | 关 |
 | `--no-browser` | onboard 时不自动打开浏览器 | 关（默认自动打开） |
+
+### `comments` 选项
+
+| 选项 | 说明 | 默认值 |
+|---|---|---|
+| `--wait` | 等待新评论出现后打印（收 NPC 报告） | 关（默认只列出现有评论） |
+| `--timeout <秒>` | `--wait` 超时 | `600` |
+| `--interval <秒>` | `--wait` 轮询间隔 | `30` |
+
+### `api` 选项
+
+| 选项 | 说明 |
+|---|---|
+| `--data <JSON>` | 请求体：内联 JSON 或 `@文件路径` 读取 JSON 文件 |
+
+> 注意：Git Bash 会把 `/xxx` 参数转换成本地路径，请加 `MSYS_NO_PATHCONV=1` 前缀或在 PowerShell/cmd 中运行。
 
 ### 环境变量
 
@@ -159,16 +190,18 @@ cnb-npc 通过 [CNB OpenAPI](https://api.cnb.cool) 与平台交互，各步骤�
 | 建仓库 | `POST /{slug}/-/repos` | `group-resource:rw` |
 | 查仓库/默认分支 | `GET /{repo}`、`GET /{repo}/-/git/head` | `repo-basic-info:r`、`repo-code:r` |
 | 开 Issue（含工作模式） | `POST /{repo}/-/issues`（`work_mode: true`） | `repo-issue:rw` |
-| 读评论 | `GET /{repo}/-/issues/{n}/comments` | `repo-notes:r` |
+| 读/发评论 | `GET`/`POST /{repo}/-/issues/{n}/comments` | `repo-notes:r` / `repo-notes:rw`（发评论重触发需写权限） |
 | 查 PR | `GET /{repo}/-/pulls`、`GET /{repo}/-/npc-observability/prs` | `repo-pr:r` |
 | 合并 PR | `PUT /{repo}/-/pulls/{n}/merge` | `repo-pr:rw` |
+
+> 其余接口（改 Issue 标题、删 Issue、列分支等）不必等封装：`node bin/cnb-npc.js api <METHOD> <path> --data '<json>'` 通用透传直接调。
 
 ### 目录结构
 
 ```
 cnb-npc-skill/
 ├── bin/
-│   └── cnb-npc.js        # CLI 入口：onboard / run / status
+│   └── cnb-npc.js        # CLI 入口：onboard / run / comment / comments / api / status
 ├── lib/
 │   ├── api.js            # CNB OpenAPI 客户端（零依赖，内置 fetch）
 │   └── config.js         # Token 存取（环境变量优先 → ~/.cnb-npc/config.json）
@@ -186,6 +219,8 @@ cnb-npc-skill/
 - NPC 在 Issue 所属仓库的默认分支上执行，脚本会自动查询并推送到默认分支
 - NPC 执行是分钟~小时级，属于异步任务，建议 `--timeout` 留足余量
 - 轮询超时后脚本以退出码 2 结束（便于 CI/自动化识别"任务未完成"），Issue 链接仍会打印
+- 只读模式（`--no-work-mode`）的任务**没有 PR 是正常的**：NPC 的报告在 Issue 评论里，用 `comments <owner/repo> <n> --wait` 收取
+- Git Bash 下运行 `api` 命令时，`/xxx` 路径参数会被 MSYS 转换成本地路径，请加 `MSYS_NO_PATHCONV=1` 前缀
 
 ## 安全
 
@@ -210,7 +245,11 @@ cnb-npc-skill/
 
 **NPC 没反应怎么办？**
 
-检查 Issue 正文 `@CodeBuddy` 是否为纯文本、`work_mode` 是否开启；再到 Issue 页面看是否有 NPC 评论/流水线状态。轮询超时后脚本会给出 Issue 链接，可到页面催办。
+检查 Issue 正文 `@CodeBuddy` 是否为纯文本、`work_mode` 是否开启；再到 Issue 页面看是否有 NPC 评论/流水线状态。轮询超时后脚本会给出 Issue 链接，可到页面催办。也可以观察评论数/更新时间是否在推进：评论在涨说明 NPC 在干活，长时间不涨再用 `comment` 发新评论重新触发。
+
+**想让 NPC 只评审、不改代码？**
+
+用 `run --no-work-mode` 派发只读任务：NPC 不会写代码/提 PR，报告直接输出在 Issue 评论里，`comments --wait` 可在命令行收取；需要多轮追问时用 `comment` 发评论即可。
 
 **为什么不用 GitHub Actions？**
 
