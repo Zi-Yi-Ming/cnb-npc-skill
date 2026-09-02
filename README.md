@@ -29,7 +29,7 @@ node bin/cnb-npc.js run "写一个 Python 脚本 hello.py，输出 Hello, CodeBu
 
 - **不占主力 agent 的上下文**：任务在 CNB 云端独立执行，不挤占本地对话窗口
 - **不占模型并发输出**：NPC 走 CNB 平台自己的模型资源，和你的本地 API 额度互不影响
-- **免费**：当前 CodeBuddy NPC 免费使用（官方原话"临时免费，年后再说"，仅 CodeBuddy，内置 hy3、deepseek-v4-flash 等模型）
+- **有免费 AI Credits 可用**：CNB 当前为 AI 能力提供免费 AI Credits，CodeBuddy NPC 可以使用平台当前提供的 AI 模型。免费额度、模型列表与后续计费规则可能会调整，具体以 CNB 当前官方页面为准，所以这里不把它描述成"永久免费"或"无限免费"
 - **质量可靠**：提示词给得相对完整时输出质量很高，大项目和批量数据处理都适用
 
 ### 它到底是什么
@@ -114,6 +114,21 @@ node bin/cnb-npc.js run "评审最近 10 个提交的异常处理" --org my-org 
 ```bash
 node bin/cnb-npc.js status
 ```
+
+## 实际测试
+
+用一个小任务做过一次端到端实测：
+
+```bash
+node bin/cnb-npc.js run "写一个 Python 脚本 hello.py，输出 Hello, CodeBuddy NPC!"
+```
+
+实测结果：约 **240 秒** 后 NPC 提交了 PR（含 README 使用说明）。测试记录：
+
+- Issue：[ziyim/hello-npc#1](https://cnb.cool/ziyim/hello-npc/-/issues/1)
+- PR：[ziyim/hello-npc#2](https://cnb.cool/ziyim/hello-npc/-/pulls/2)
+
+> 说明：NPC 执行是异步任务，耗时通常为分钟~小时级；上面的 240 秒只是该小任务的实测值，不代表所有任务的速度，请以实际任务复杂度为准。
 
 ## 命令参考
 
@@ -229,9 +244,19 @@ cnb-npc-skill/
 - 仓库默认 `private`；需要公开时用 `--visibility public`
 - NPC 侧的 `CNB_TOKEN` 由平台限制在单仓库内
 
-## 计费
+## AI 模型与免费额度
 
-当前 CNB 的 NPC 为免费阶段。官方原话：临时免费，年后再说（免费仅限CodeBuddy，内置hy3和deepseek-v4-flash）。收费政策以官方公告为准。用量可在 `组织 → 设置 → 用量管理` 查看（详见 [CNB 定价文档](https://docs.cnb.cool/zh/pricing.html)）。
+CNB 当前为 AI 能力提供免费的 AI Credits，CodeBuddy NPC 可以使用平台当前提供的 AI 模型。
+
+目前平台界面可以看到的模型包括：
+
+- DeepSeek V4 Flash
+- GLM 5.3 Flash
+- HY4 Preview
+
+> 这里只说明"当前平台提供这些模型、可用于 CodeBuddy NPC / AI 能力"，不涉及模型参数量、上下文长度、benchmark 或性能对比。免费额度、模型列表以及后续计费规则可能会调整，具体以 [CNB 定价文档](https://docs.cnb.cool/zh/saas/pricing.html) 与 [CodeBuddy NPC 文档](https://docs.cnb.cool/zh/build/npc.html) 为准。
+>
+> 因此本 README 不把 CodeBuddy NPC 描述为"永久免费""无限免费"或"免费使用所有模型"。用量可在 `组织 → 设置 → 用量管理` 查看。
 
 ## FAQ
 
